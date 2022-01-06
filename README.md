@@ -1,11 +1,25 @@
 # Create Action
 
+## Setup
+
+In this lesson, we'll be using some existing code to explore the `create` action
+in Rails. To get the app set up, run:
+
+```console
+$ bundle install
+```
+
+## Creating Records
+
 In this lesson, we'll code a `create` action — '**C**' in the '**CRUD**' life
 cycle — that saves a new `Post` object and then redirects to the newly-created
 post's `show` page.
 
-Before implementing this functionality, let's first open up
-a Rails console session and create a record manually:
+Before implementing this functionality, let's first open up a Rails console
+session and create a record manually.
+
+First, run `rails c` to enter a console, then enter the following lines one at a
+time:
 
 ```ruby
 post = Post.new
@@ -32,6 +46,11 @@ the SQL statement, and the method returns `true` upon a successful save. At a
 high level, this is what the `create` method in our `PostsController` will be
 doing.
 
+Now that we've created a post manually, exit the Rails console by typing `exit`
+or pressing `Control + d`.
+
+## Defining a Create Action
+
 Open up the `posts_controller.rb` file. Let's do a few things to replicate the
 behavior we had in the console:
 
@@ -49,6 +68,7 @@ properly connected to the controller and model, we can populate the `title` and
 `description` attributes based on the user input:
 
 ```ruby
+# app/controllers/posts_controller.rb
 def create
   post = Post.new
   post.title = params[:title]
@@ -65,37 +85,48 @@ initialize a new instance of `Post`, grab those input values from `params`,
 assign them the `post` instance attributes and save the instance to our
 database.
 
-We've already got the route and our form created. If you go to `/posts/new`,
-fill out the form, and submit it, you'll get the error shown below.
+We've already got the route and our form created. Let's explore this
+functionality by running the server with `rails s`. If you go to `/posts/new`,
+fill out the form, and submit it, you'll get the message shown below in your
+terminal:
 
-![Missing Create Template Error](https://s3.amazonaws.com/flatiron-bucket/readme-lessons/template_error_create.png)
+```txt
+   (0.3ms)  begin transaction
+  SQL (1.1ms)  INSERT INTO "posts" ("title", "description", "created_at", "updated_at") VALUES (?, ?, ?, ?)  [["title", "A new post"], ["description", "desc"], ["created_at", "2022-01-06 16:12:44.564952"], ["updated_at", "2022-01-06 16:12:44.564952"]]
+   (1.7ms)  commit transaction
+No template found for PostsController#create, rendering head :no_content
+Completed 204 No Content in 39ms (ActiveRecord: 3.0ms)
+```
 
-That's OK! Rails is simply complaining that it can't find a `create` view
-template since, by default, it's trying to render a template called
-`create.html.erb` (which doesn't exist). Remember, Rails tries to map each
-controller action directly to a template. However, with actions like `create`,
-we don't want a view template –– all we want is for the action to communicate
-with the database and then redirect to a different page.
+Great! Our record was created. The last line of the terminal output,
+`No template found for PostsController#create` simply means that Rails can't
+find a `create` view template since, by default, it's trying to render a
+template called `create.html.erb` (which doesn't exist). Remember, Rails tries
+to map each controller action directly to a template. However, with actions like
+`create`, we don't want a view template –– all we want is for the action to
+communicate with the database and then redirect to a different page.
 
-If you open up the console, you'll see that the record was successfully created
-in the database even though we ran into an error page. Our form and `create`
-action are working properly. How do we know the record was successfully created?
-There are a couple of ways to check:
+In the console, you'll see that the record was successfully created in the
+database even though we didn't see anything change in the browser. Our form and
+`create` action are working properly. How do we know the record was successfully
+created? There are a couple of ways to check:
 
 1. Type `Post.last` into the Rails console, and it will display the most
-   recently created record. We can look at the record's `created_at` attribute to
-   ensure the timestamp is current.
+   recently created record. We can look at the record's `created_at` attribute
+   to ensure the timestamp is current.
 
 2. We can also simply scroll up through the Rails server logs. All SQL
    statements are printed out in the log, so it's just a matter of locating the
    correct `INSERT` statement (example below):
 
-```shell
+```txt
  (0.1ms)  begin transaction
 SQL (0.7ms)  INSERT INTO "posts" ("title", "description", "created_at", "updated_at")
 VALUES (?, ?, ?, ?)  [["title", "My Post"], ["description", "My desc"], ["created_at", "2015-12-26 18:00:31.393419"], ["updated_at", "2015-12-26 18:00:31.393419"]]
  (2.2ms)  commit transaction
 ```
+
+## Redirecting After Create
 
 To fix the 'missing template' error, we simply need to redirect the user after
 they've filled out the form. Let's do two refactors:
